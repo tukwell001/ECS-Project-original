@@ -5,10 +5,11 @@
     
     # Install dependencies first (cached)
     COPY package*.json ./
-    RUN npm ci --only=production
+    RUN npm install --omit=dev
+
     
     # Copy source
-    COPY index.js .
+    COPY . .
     
     # ---------- Runtime stage ----------
     FROM gcr.io/distroless/nodejs20-debian12:nonroot
