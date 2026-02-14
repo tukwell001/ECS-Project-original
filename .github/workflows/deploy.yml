@@ -48,9 +48,7 @@ jobs:
       - name: Build Docker image
         run: |
          docker build -t $ECR_REPOSITORY:${{ github.sha }} .
-        #   docker build -t $ECR_REPOSITORY:${{ steps.meta.outputs.sha_short }} ./threatmod-app
-             
-
+       
       - name: Tag image for ECR
         run: |
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
