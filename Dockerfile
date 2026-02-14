@@ -5,7 +5,7 @@
     
     # Install dependencies first (cached)
     COPY package*.json ./
-    RUN npm install --omit=dev
+    RUN npm install --only=production
 
     
     # Copy source
