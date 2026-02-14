@@ -47,7 +47,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t $ECR_REPOSITORY:${{ steps.meta.outputs.sha_short }} .
+          docker build -f threatmod-app/Dockerfile -t $ECR_REPOSITORY:${{ steps.meta.outputs.sha_short }} .
 
       - name: Tag image for ECR
         run: |
