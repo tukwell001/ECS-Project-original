@@ -10,10 +10,6 @@ env:
   AWS_REGION: eu-west-2
   ECR_REPOSITORY: tm-app
   TF_VERSION: 1.6.6
-
-# Define reusable variables for AWS credentials and domain name
-  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
   DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
 jobs:
 
@@ -48,17 +44,14 @@ jobs:
       - name: Build Docker image
         run: |
             docker build -t $ECR_REPOSITORY:${{ steps.meta.outputs.sha_short }} ./threatmod-app
-       
-      - name: Tag image for ECR
-        run: |
-          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-          docker tag $ECR_REPOSITORY:${{ steps.meta.outputs.sha_short }} \
-            $ACCOUNT_ID.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPOSITORY:${{ steps.meta.outputs.sha_short }}
 
-      - name: Push image to ECR
+      - name: Tag and Push image
         run: |
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-          docker push $ACCOUNT_ID.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPOSITORY:${{ steps.meta.outputs.sha_short }}
+          IMAGE_URI=$ACCOUNT_ID.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPOSITORY:${{ steps.meta.outputs.sha_short }}
+
+          docker tag $ECR_REPOSITORY:${{ steps.meta.outputs.sha_short }} $IMAGE_URI
+          docker push $IMAGE_URI
 
   terraform-deploy:
     name: Terraform Deploy
@@ -76,7 +69,7 @@ jobs:
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::<account-id>:role/github-oidc-role
+          role-to-assume: arn:aws:iam::533267291785:role/github-action-role
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Setup Terraform
@@ -122,8 +115,9 @@ jobs:
 
       - name: Health Check
         run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://tm.${{ secrets.DOMAIN_NAME }}/health)
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://tm.${{ env.DOMAIN_NAME }}/health)
           echo "HTTP Status: $STATUS"
+
           if [ "$STATUS" -ne 200 ]; then
             echo "Health check failed"
             exit 1
@@ -131,6 +125,6 @@ jobs:
 
       - name: Job Summary
         run: |
-          echo "## 🚀 Deployment Successful" >> $GITHUB_STEP_SUMMARY
-        #   echo "Image Tag: ${{ needs.build-and-push.outputs.image_tag }}" >> $GITHUB_STEP_SUMMARY
-        #   echo "URL: https://tm.${{ secrets.DOMAIN_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "## 🚀 Deployment Successful" >> $GITHUB_STEP_SUMMARY 
+           echo "Image Tag: ${{ needs.build-and-push.outputs.image_tag }}" >> $GITHUB_STEP_SUMMARY
+           echo "URL: https://tm.${{ env.DOMAIN_NAME }}" >> $GITHUB_STEP_SUMMARY
