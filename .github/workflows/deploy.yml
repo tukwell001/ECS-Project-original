@@ -126,5 +126,5 @@ jobs:
       - name: Job Summary
         run: |
           echo "## 🚀 Deployment Successful" >> $GITHUB_STEP_SUMMARY 
-           echo "Image Tag: ${{ needs.build-and-push.outputs.image_tag }}" >> $GITHUB_STEP_SUMMARY
-           echo "URL: https://tm.${{ env.DOMAIN_NAME }}" >> $GITHUB_STEP_SUMMARY
+    # echo "Image Tag: ${{ needs.build-and-push.outputs.image_tag }}" >> $GITHUB_STEP_SUMMARY
+    #  echo "URL: https://tm.${{ env.DOMAIN_NAME }}" >> $GITHUB_STEP_SUMMARY
